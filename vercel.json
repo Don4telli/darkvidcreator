@@ -4,9 +4,17 @@
     {
       "src": "api/app.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/health.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
+    {
+      "src": "/health",
+      "dest": "/api/health.py"
+    },
     {
       "src": "/(.*)",
       "dest": "/api/app.py"
@@ -19,6 +27,9 @@
   "buildCommand": "./build.sh",
   "functions": {
     "api/app.py": {
+      "includeFiles": "**"
+    },
+    "api/health.py": {
       "includeFiles": "**"
     }
   }
