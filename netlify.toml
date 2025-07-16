@@ -13,8 +13,6 @@
   PYTHON_VERSION = "3.9"
   FLASK_APP = "gui_web:app"
   FLASK_ENV = "production"
-  NODE_VERSION = "16"
-  NPM_FLAGS = "--version"  # Required for Netlify to detect Node.js
 
 [[redirects]]
   from = "/api/*"
@@ -28,8 +26,6 @@
   status = 200
 
 [functions]
-  node_bundler = "esbuild"
-  external_node_modules = ["@netlify/plugin-functions-install-core"]
   directory = "netlify/functions"
   python_version = "3.9"
 
