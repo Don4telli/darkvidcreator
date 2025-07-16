@@ -372,68 +372,216 @@ def debug_info():
 
 @app.route('/debug/moviepy')
 def debug_moviepy():
-    """Specific MoviePy debug endpoint."""
+    """Comprehensive MoviePy and FFmpeg test endpoint."""
+    import traceback
+    import json
+    from io import BytesIO
+    import numpy as np
+    from PIL import Image
+    import subprocess
+    import platform
+    import sys
+    import pkg_resources
+    
+    def get_system_info():
+        """Collect system and environment information."""
+        return {
+            'platform': platform.platform(),
+            'python_version': sys.version,
+            'executable': sys.executable,
+            'path': sys.path,
+            'environment': {k: v for k, v in os.environ.items() 
+                          if k in ('PATH', 'LD_LIBRARY_PATH', 'PYTHONPATH', 'VERCEL')},
+            'installed_packages': sorted([f"{p.project_name}=={p.version}" 
+                                      for p in pkg_resources.working_set])
+        }
+    
+    def test_ffmpeg():
+        """Test FFmpeg installation and functionality."""
+        result = {'status': 'not_tested'}
+        try:
+            # Check if ffmpeg is in PATH
+            ffmpeg_path = subprocess.check_output(['which', 'ffmpeg'], 
+                                               stderr=subprocess.STDOUT).decode().strip()
+            result['path'] = ffmpeg_path
+            
+            # Get version
+            version_output = subprocess.check_output(
+                ['ffmpeg', '-version'], 
+                stderr=subprocess.STDOUT
+            ).decode('utf-8', errors='replace')
+            
+            result['version'] = version_output.split('\n')[0]
+            
+            # Check codecs
+            codec_output = subprocess.check_output(
+                ['ffmpeg', '-codecs'], 
+                stderr=subprocess.STDOUT
+            ).decode('utf-8', errors='replace')
+            
+            result['codecs'] = {
+                'libx264': 'libx264' in codec_output,
+                'aac': 'aac' in codec_output,
+                'libmp3lame': 'libmp3lame' in codec_output
+            }
+            
+            # Test simple conversion
+            test_input = os.path.join(os.path.dirname(__file__), '..', 'test', 'test_input.txt')
+            test_output = os.path.join(os.path.dirname(__file__), '..', 'test', 'test_output.mp4')
+            
+            # Create test input
+            os.makedirs(os.path.dirname(test_input), exist_ok=True)
+            with open(test_input, 'w') as f:
+                f.write("file 'test_input.txt'\nduration 1\nfile 'test_input.txt'")
+            
+            ffmpeg_cmd = [
+                'ffmpeg',
+                '-f', 'lavfi',
+                '-i', 'testsrc=duration=1:size=320x240:rate=30',
+                '-c:v', 'libx264',
+                '-pix_fmt', 'yuv420p',
+                '-y',  # Overwrite output file
+                test_output
+            ]
+            
+            try:
+                subprocess.run(
+                    ffmpeg_cmd,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=10
+                )
+                result['test_video_creation'] = 'success'
+                if os.path.exists(test_output):
+                    result['test_video_size'] = f"{os.path.getsize(test_output) / 1024:.1f} KB"
+                    os.remove(test_output)
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+                result['test_video_creation'] = f'failed: {str(e)}'
+                if hasattr(e, 'stderr') and e.stderr:
+                    result['ffmpeg_error'] = e.stderr.decode('utf-8', errors='replace')
+            
+            result['status'] = 'success'
+            
+        except subprocess.CalledProcessError as e:
+            result['status'] = f'error: {str(e)}'
+            if hasattr(e, 'output') and e.output:
+                result['error_output'] = e.output.decode('utf-8', errors='replace')
+        except Exception as e:
+            result['status'] = f'unexpected error: {str(e)}'
+            
+        return result
+    
+    def test_moviepy():
+        """Test MoviePy functionality."""
+        result = {'status': 'not_tested'}
+        
+        try:
+            # Import moviepy
+            import moviepy
+            result['version'] = getattr(moviepy, '__version__', 'unknown')
+            
+            # Test basic imports
+            from moviepy.editor import VideoFileClip, AudioFileClip, ImageClip, ColorClip, concatenate_videoclips
+            result['imports'] = 'success'
+            
+            # Create test directory
+            test_dir = os.path.join(os.path.dirname(__file__), '..', 'test')
+            os.makedirs(test_dir, exist_ok=True)
+            
+            # Test 1: Create and save a simple color clip
+            try:
+                clip = ColorClip((320, 240), color=(255, 0, 0), duration=1)
+                test_video = os.path.join(test_dir, 'test_color.mp4')
+                clip.write_videofile(
+                    test_video, 
+                    fps=24, 
+                    codec='libx264',
+                    audio_codec='aac',
+                    logger=None
+                )
+                result['color_clip'] = 'success'
+                if os.path.exists(test_video):
+                    result['color_clip_size'] = f"{os.path.getsize(test_video) / 1024:.1f} KB"
+                    os.remove(test_video)
+            except Exception as e:
+                result['color_clip'] = f'error: {str(e)}'
+            
+            # Test 2: Create and save an audio clip
+            try:
+                audio = AudioClip(
+                    lambda t: [np.sin(440 * 2 * np.pi * t)],
+                    duration=1,
+                    fps=44100
+                )
+                test_audio = os.path.join(test_dir, 'test_audio.mp3')
+                audio.write_audiofile(
+                    test_audio,
+                    codec='libmp3lame',
+                    bitrate='128k',
+                    logger=None
+                )
+                result['audio_clip'] = 'success'
+                if os.path.exists(test_audio):
+                    result['audio_clip_size'] = f"{os.path.getsize(test_audio) / 1024:.1f} KB"
+                    os.remove(test_audio)
+            except Exception as e:
+                result['audio_clip'] = f'error: {str(e)}'
+            
+            # Test 3: Create and save an image clip
+            try:
+                img = Image.new('RGB', (320, 240), color='green')
+                img_byte_arr = BytesIO()
+                img.save(img_byte_arr, format='PNG')
+                img_byte_arr = img_byte_arr.getvalue()
+                
+                image_clip = ImageClip(img_byte_arr).set_duration(1)
+                test_image_video = os.path.join(test_dir, 'test_image.mp4')
+                image_clip.write_videofile(
+                    test_image_video,
+                    fps=24,
+                    codec='libx264',
+                    audio_codec='aac',
+                    logger=None
+                )
+                result['image_clip'] = 'success'
+                if os.path.exists(test_image_video):
+                    result['image_clip_size'] = f"{os.path.getsize(test_image_video) / 1024:.1f} KB"
+                    os.remove(test_image_video)
+            except Exception as e:
+                result['image_clip'] = f'error: {str(e)}'
+            
+            result['status'] = 'success'
+            
+        except ImportError as e:
+            result['status'] = f'import error: {str(e)}'
+            result['traceback'] = traceback.format_exc()
+        except Exception as e:
+            result['status'] = f'unexpected error: {str(e)}'
+            result['traceback'] = traceback.format_exc()
+            
+        return result
+    
+    # Main test execution
     try:
-        moviepy_debug = {
-            'moviepy_import_status': 'not_attempted',
-            'moviepy_version': None,
-            'moviepy_location': None,
-            'moviepy_directory_contents': [],
-            'editor_import_status': 'not_attempted',
-            'editor_location': None,
-            'alternative_imports': {},
-            'moviepy_structure': {}
+        results = {
+            'system': get_system_info(),
+            'ffmpeg': test_ffmpeg(),
+            'moviepy': test_moviepy(),
+            'timestamp': datetime.datetime.utcnow().isoformat(),
+            'status': 'complete'
         }
         
-        # Try importing moviepy
-        try:
-            import moviepy
-            moviepy_debug['moviepy_import_status'] = 'success'
-            moviepy_debug['moviepy_version'] = getattr(moviepy, '__version__', 'unknown')
-            moviepy_debug['moviepy_location'] = moviepy.__file__
-            
-            # Get directory contents
-            moviepy_dir = os.path.dirname(moviepy.__file__)
-            moviepy_debug['moviepy_directory_contents'] = os.listdir(moviepy_dir)
-            
-            # Explore moviepy structure
-            for root, dirs, files in os.walk(moviepy_dir):
-                level = root.replace(moviepy_dir, '').count(os.sep)
-                if level < 3:  # Limit depth
-                    rel_path = os.path.relpath(root, moviepy_dir)
-                    moviepy_debug['moviepy_structure'][rel_path] = {
-                        'dirs': dirs,
-                        'py_files': [f for f in files if f.endswith('.py')]
-                    }
-                    
-        except ImportError as e:
-            moviepy_debug['moviepy_import_status'] = f'failed: {str(e)}'
+        # Clean up test directory
+        test_dir = os.path.join(os.path.dirname(__file__), '..', 'test')
+        if os.path.exists(test_dir):
+            for f in os.listdir(test_dir):
+                try:
+                    os.remove(os.path.join(test_dir, f))
+                except:
+                    pass
         
-        # Try importing moviepy.editor
-        try:
-            import moviepy.editor
-            moviepy_debug['editor_import_status'] = 'success'
-            moviepy_debug['editor_location'] = moviepy.editor.__file__
-        except ImportError as e:
-            moviepy_debug['editor_import_status'] = f'failed: {str(e)}'
-        
-        # Try alternative imports
-        alternatives = [
-            ('VideoFileClip', 'from moviepy import VideoFileClip'),
-            ('AudioFileClip', 'from moviepy import AudioFileClip'),
-            ('ImageClip', 'from moviepy import ImageClip'),
-            ('VideoFileClip_direct', 'from moviepy.video.io.VideoFileClip import VideoFileClip'),
-            ('AudioFileClip_direct', 'from moviepy.audio.io.AudioFileClip import AudioFileClip')
-        ]
-        
-        for name, import_statement in alternatives:
-            try:
-                exec(import_statement)
-                moviepy_debug['alternative_imports'][name] = 'success'
-            except Exception as e:
-                moviepy_debug['alternative_imports'][name] = f'failed: {str(e)}'
-        
-        return jsonify(moviepy_debug)
+        return jsonify(results)
         
     except Exception as e:
         return jsonify({'error': f'MoviePy debug error: {str(e)}'}), 500
