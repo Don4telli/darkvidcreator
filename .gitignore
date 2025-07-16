@@ -106,6 +106,15 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+venv39/
+
+# Dependency directories
+*.dist-info/
+
+# Other potential ignores
+.netlify/
+.vercel/
+node_modules/
 
 # Spyder project settings
 .spyderproject
@@ -167,3 +176,4 @@ yarn-error.log*
 
 # Vercel
 .vercel/
+.vercel

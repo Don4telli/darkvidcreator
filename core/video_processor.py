@@ -6,10 +6,8 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, ColorClip, VideoFileClip
 import numpy as np
-import cv2
 from collections import defaultdict
 import numpy as np
-import cv2
 import re
 
 class VideoProcessor:
@@ -475,20 +473,38 @@ class VideoProcessor:
     
     def _is_green_screen_frame(self, frame: np.ndarray, threshold: float = 0.8) -> bool:
         """Check if a frame is predominantly green screen"""
-        # Convert RGB to HSV for better green detection
-        hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
-        
-        # Define green color range in HSV
-        # Green hue is around 60 in HSV (0-179 range)
-        lower_green = np.array([40, 50, 50])   # Lower bound for green
-        upper_green = np.array([80, 255, 255]) # Upper bound for green
-        
-        # Create mask for green pixels
-        green_mask = cv2.inRange(hsv, lower_green, upper_green)
-        
-        # Calculate percentage of green pixels
+        # Normalize frame to 0-1
+        frame = frame.astype(np.float32) / 255.0
+        # Extract channels (assuming frame is RGB)
+        r = frame[:,:,0]
+        g = frame[:,:,1]
+        b = frame[:,:,2]
+        # Compute max and min
+        cmax = np.maximum(np.maximum(r, g), b)
+        cmin = np.minimum(np.minimum(r, g), b)
+        delta = cmax - cmin
+        # Hue
+        h = np.zeros_like(cmax)
+        mask = delta > 0
+        idx = (cmax == r) & mask
+        h[idx] = np.mod(60 * (g[idx] - b[idx]) / delta[idx] + 360, 360)
+        idx = (cmax == g) & mask
+        h[idx] = np.mod(60 * (b[idx] - r[idx]) / delta[idx] + 120, 360)
+        idx = (cmax == b) & mask
+        h[idx] = np.mod(60 * (r[idx] - g[idx]) / delta[idx] + 240, 360)
+        h = h / 360.0  # to 0-1
+        # Saturation
+        s = np.where(cmax > 0, delta / cmax, 0)
+        # Value
+        v = cmax
+        # Green range in 0-1 scale
+        lower_green = (0.222, 0.196, 0.196)
+        upper_green = (0.444, 1.0, 1.0)
+        # Mask
+        mask = (h >= lower_green[0]) & (h <= upper_green[0]) & \
+               (s >= lower_green[1]) & (s <= upper_green[1]) & \
+               (v >= lower_green[2]) & (v <= upper_green[2])
+        green_pixels = np.sum(mask)
         total_pixels = frame.shape[0] * frame.shape[1]
-        green_pixels = np.sum(green_mask > 0)
         green_percentage = green_pixels / total_pixels
-        
         return green_percentage > threshold
