@@ -12,6 +12,10 @@
     {
       "src": "api/debug.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/test_moviepy.py",
+      "use": "@vercel/python"
     }
   ],
   "build": {
@@ -19,12 +23,21 @@
       "PYTHON_VERSION": "3.9",
       "NPM_CONFIG_PYTHON": "/usr/local/bin/python",
       "LD_LIBRARY_PATH": "/usr/local/lib",
-      "PIP_CACHE_DIR": "/tmp/pip_cache"
+      "PIP_CACHE_DIR": "/tmp/pip_cache",
+      "PYTHONPATH": "/var/task"
     },
     "use": "@vercel/python@5.1.1",
     "config": {
-      "maxLambdaSize": "15mb",
-      "includeFiles": ["**/*.py", "**/*.json", "**/*.md", "**/*.txt"]
+      "maxLambdaSize": "50mb",
+      "includeFiles": [
+        "**/*.py",
+        "**/*.json",
+        "**/*.md",
+        "**/*.txt",
+        "**/*.so*",
+        "**/*.dll",
+        "**/*.dylib"
+      ]
     }
   },
   "routes": [
