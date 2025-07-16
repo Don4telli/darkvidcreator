@@ -391,6 +391,21 @@ def debug_moviepy():
     import platform
     import sys
     import pkg_resources
+    import logging
+    
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    
+    def log_error(message, error=None):
+        """Helper function to log errors."""
+        error_info = {
+            'message': message,
+            'error': str(error) if error else None,
+            'traceback': traceback.format_exc() if error else None
+        }
+        logger.error(json.dumps(error_info, indent=2))
+        return error_info
     
     def get_system_info():
         """Collect system and environment information."""
@@ -573,23 +588,63 @@ def debug_moviepy():
     
     # Main test execution
     try:
+        logger.info("Starting debug endpoint execution")
+        
+        # Initialize results with basic info
         results = {
-            'system': get_system_info(),
-            'ffmpeg': test_ffmpeg(),
-            'moviepy': test_moviepy(),
+            'system': {},
+            'ffmpeg': {},
+            'moviepy': {},
             'timestamp': datetime.datetime.utcnow().isoformat(),
-            'status': 'complete'
+            'status': 'in_progress'
         }
         
-        # Clean up test directory
-        test_dir = os.path.join(os.path.dirname(__file__), '..', 'test')
-        if os.path.exists(test_dir):
-            for f in os.listdir(test_dir):
-                try:
-                    os.remove(os.path.join(test_dir, f))
-                except:
-                    pass
+        # Test system info first
+        try:
+            logger.info("Collecting system info")
+            results['system'] = get_system_info()
+            logger.info(f"System info collected: {json.dumps(results['system'], default=str, indent=2)}")
+        except Exception as e:
+            error_info = log_error("Failed to collect system info", e)
+            results['system'] = {'error': error_info}
+            logger.error(f"System info error: {error_info}")
         
+        # Test FFmpeg
+        try:
+            logger.info("Testing FFmpeg")
+            results['ffmpeg'] = test_ffmpeg()
+            logger.info(f"FFmpeg test completed: {json.dumps(results['ffmpeg'], default=str, indent=2)}")
+        except Exception as e:
+            error_info = log_error("FFmpeg test failed", e)
+            results['ffmpeg'] = {'error': error_info}
+            logger.error(f"FFmpeg test error: {error_info}")
+        
+        # Test MoviePy
+        try:
+            logger.info("Testing MoviePy")
+            results['moviepy'] = test_moviepy()
+            logger.info(f"MoviePy test completed: {json.dumps(results['moviepy'], default=str, indent=2)}")
+        except Exception as e:
+            error_info = log_error("MoviePy test failed", e)
+            results['moviepy'] = {'error': error_info}
+            logger.error(f"MoviePy test error: {error_info}")
+        
+        # Update final status
+        results['status'] = 'complete'
+        
+        # Clean up test directory
+        try:
+            test_dir = os.path.join(os.path.dirname(__file__), '..', 'test')
+            if os.path.exists(test_dir):
+                for f in os.listdir(test_dir):
+                    try:
+                        os.remove(os.path.join(test_dir, f))
+                    except Exception as e:
+                        logger.warning(f"Failed to clean up {f}: {str(e)}")
+        except Exception as e:
+            logger.warning(f"Cleanup failed: {str(e)}")
+        
+        logger.info("Debug endpoint execution completed successfully")
         return jsonify(results)
         
     except Exception as e:
