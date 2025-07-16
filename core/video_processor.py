@@ -4,7 +4,30 @@ import traceback
 import tempfile
 from pathlib import Path
 from typing import List, Dict, Tuple
-from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, ColorClip, VideoFileClip
+
+# Try multiple import strategies for MoviePy compatibility
+try:
+    # Strategy 1: Standard moviepy.editor imports (works with moviepy 1.0.3)
+    from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, ColorClip, VideoFileClip, concatenate_audioclips
+except ImportError:
+    try:
+        # Strategy 2: Direct imports from moviepy (works with some versions)
+        from moviepy import VideoFileClip, AudioFileClip, ImageClip, ColorClip, concatenate_videoclips, concatenate_audioclips
+    except ImportError:
+        try:
+            # Strategy 3: Direct module imports (fallback for newer versions)
+            from moviepy.video.io.VideoFileClip import VideoFileClip
+            from moviepy.audio.io.AudioFileClip import AudioFileClip
+            from moviepy.video.VideoClip import ImageClip, ColorClip
+            from moviepy.video.compositing.concatenate import concatenate_videoclips
+            from moviepy.audio.tools.concatenate import concatenate_audioclips
+        except ImportError as e:
+            # If all strategies fail, raise a detailed error
+            raise ImportError(
+                f"Failed to import MoviePy components. Original error: {e}. "
+                "Please check MoviePy installation and version compatibility."
+            )
+
 import numpy as np
 from collections import defaultdict
 import numpy as np
@@ -311,7 +334,6 @@ class VideoProcessor:
 
             # Create audio track: repeat audio for each group + silence for green screens
             print(f"DEBUG: Creating audio track for {num_groups} groups")
-            from moviepy.editor import concatenate_audioclips
             audio_segments = []
             for i in range(num_groups):
                 audio_segments.append(audio_clip)

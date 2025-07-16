@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 import tempfile
 import shutil
 from pathlib import Path
+import subprocess
 
 # Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -319,6 +320,124 @@ def get_transcription(session_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/debug')
+def debug_info():
+    """Debug endpoint to check environment and dependencies."""
+    try:
+        debug_data = {
+            'python_version': sys.version,
+            'python_path': sys.path,
+            'current_directory': os.getcwd(),
+            'environment_variables': dict(os.environ),
+            'installed_packages': [],
+            'ffmpeg_check': None,
+            'file_structure': {}
+        }
+        
+        # Check installed packages
+        try:
+            result = subprocess.run([sys.executable, '-m', 'pip', 'list'], 
+                                  capture_output=True, text=True, timeout=30)
+            debug_data['installed_packages'] = result.stdout.split('\n')
+        except Exception as e:
+            debug_data['installed_packages'] = f'Error getting packages: {str(e)}'
+        
+        # Check FFmpeg
+        try:
+            result = subprocess.run(['ffmpeg', '-version'], 
+                                  capture_output=True, text=True, timeout=10)
+            debug_data['ffmpeg_check'] = 'FFmpeg available'
+        except Exception as e:
+            debug_data['ffmpeg_check'] = f'FFmpeg not available: {str(e)}'
+        
+        # Check file structure
+        try:
+            current_dir = os.getcwd()
+            for root, dirs, files in os.walk(current_dir):
+                # Limit depth to avoid too much data
+                level = root.replace(current_dir, '').count(os.sep)
+                if level < 3:
+                    rel_path = os.path.relpath(root, current_dir)
+                    debug_data['file_structure'][rel_path] = {
+                        'dirs': dirs[:10],  # Limit to first 10
+                        'files': files[:10]  # Limit to first 10
+                    }
+        except Exception as e:
+            debug_data['file_structure'] = f'Error reading file structure: {str(e)}'
+        
+        return jsonify(debug_data)
+        
+    except Exception as e:
+         return jsonify({'error': f'Debug endpoint error: {str(e)}'}), 500
+
+@app.route('/debug/moviepy')
+def debug_moviepy():
+    """Specific MoviePy debug endpoint."""
+    try:
+        moviepy_debug = {
+            'moviepy_import_status': 'not_attempted',
+            'moviepy_version': None,
+            'moviepy_location': None,
+            'moviepy_directory_contents': [],
+            'editor_import_status': 'not_attempted',
+            'editor_location': None,
+            'alternative_imports': {},
+            'moviepy_structure': {}
+        }
+        
+        # Try importing moviepy
+        try:
+            import moviepy
+            moviepy_debug['moviepy_import_status'] = 'success'
+            moviepy_debug['moviepy_version'] = getattr(moviepy, '__version__', 'unknown')
+            moviepy_debug['moviepy_location'] = moviepy.__file__
+            
+            # Get directory contents
+            moviepy_dir = os.path.dirname(moviepy.__file__)
+            moviepy_debug['moviepy_directory_contents'] = os.listdir(moviepy_dir)
+            
+            # Explore moviepy structure
+            for root, dirs, files in os.walk(moviepy_dir):
+                level = root.replace(moviepy_dir, '').count(os.sep)
+                if level < 3:  # Limit depth
+                    rel_path = os.path.relpath(root, moviepy_dir)
+                    moviepy_debug['moviepy_structure'][rel_path] = {
+                        'dirs': dirs,
+                        'py_files': [f for f in files if f.endswith('.py')]
+                    }
+                    
+        except ImportError as e:
+            moviepy_debug['moviepy_import_status'] = f'failed: {str(e)}'
+        
+        # Try importing moviepy.editor
+        try:
+            import moviepy.editor
+            moviepy_debug['editor_import_status'] = 'success'
+            moviepy_debug['editor_location'] = moviepy.editor.__file__
+        except ImportError as e:
+            moviepy_debug['editor_import_status'] = f'failed: {str(e)}'
+        
+        # Try alternative imports
+        alternatives = [
+            ('VideoFileClip', 'from moviepy import VideoFileClip'),
+            ('AudioFileClip', 'from moviepy import AudioFileClip'),
+            ('ImageClip', 'from moviepy import ImageClip'),
+            ('VideoFileClip_direct', 'from moviepy.video.io.VideoFileClip import VideoFileClip'),
+            ('AudioFileClip_direct', 'from moviepy.audio.io.AudioFileClip import AudioFileClip')
+        ]
+        
+        for name, import_statement in alternatives:
+            try:
+                exec(import_statement)
+                moviepy_debug['alternative_imports'][name] = 'success'
+            except Exception as e:
+                moviepy_debug['alternative_imports'][name] = f'failed: {str(e)}'
+        
+        return jsonify(moviepy_debug)
+        
+    except Exception as e:
+        return jsonify({'error': f'MoviePy debug error: {str(e)}'}), 500
+ 
 
 def find_free_port(start_port=5001):
     """Find a free port starting from start_port."""
