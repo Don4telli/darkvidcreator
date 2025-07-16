@@ -1,0 +1,30 @@
+ImageToVideo Web GUI
+====================
+
+🌐 Starting web server on http://localhost:5006
+The web interface will open automatically in your browser.
+Press Ctrl+C to stop the server.
+
+ * Serving Flask app 'gui_web'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://localhost:5006
+Press CTRL+C to quit
+127.0.0.1 - - [10/Jul/2025 19:25:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:38] "POST /transcribe_tiktok HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:39] "GET /progress?session_id=tmpqc99zil8&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:40] "GET /progress?session_id=tmpqc99zil8&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:41] "GET /progress?session_id=tmpqc99zil8&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:42] "GET /progress?session_id=tmpqc99zil8&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:43] "GET /progress?session_id=tmpqc99zil8&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:44] "GET /progress?session_id=tmpqc99zil8&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [10/Jul/2025 19:30:44] "GET /get_transcription/tmpqc99zil8 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:39] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:43] "POST /transcribe_tiktok HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:44] "GET /progress?session_id=tmpazuwwxlu&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:45] "GET /progress?session_id=tmpazuwwxlu&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:46] "GET /progress?session_id=tmpazuwwxlu&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:47] "GET /progress?session_id=tmpazuwwxlu&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:48] "GET /progress?session_id=tmpazuwwxlu&type=transcribe HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jul/2025 18:18:48] "GET /get_transcription/tmpazuwwxlu HTTP/1.1" 200 -

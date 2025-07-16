@@ -1,0 +1,38 @@
+[build]
+  command = "pip install -r requirements.txt && pip install -r netlify/functions/server/requirements.txt"
+  publish = "public"
+  functions = "netlify/functions"
+
+[dev]
+  command = "python gui_web.py"
+  targetPort = 5000
+  publish = "public"
+  autoLaunch = true
+
+[build.environment]
+  PYTHON_VERSION = "3.9"
+  FLASK_APP = "gui_web:app"
+  FLASK_ENV = "production"
+  NODE_VERSION = "16"
+  NPM_FLAGS = "--version"  # Required for Netlify to detect Node.js
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/server/:splat"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@netlify/plugin-functions-install-core"]
+  directory = "netlify/functions"
+
+# Note: Netlify is primarily for static sites
+# For a Flask app like this, you'll need to use Netlify Functions
+# or consider other platforms like Vercel, Railway, or Heroku
+# that better support Python web applications

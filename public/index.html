@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageToVideo App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ImageToVideo Application</h1>
+        <p>Your application is being loaded. If you're not redirected automatically, click the button below:</p>
+        <a href="/api/" class="btn">Go to Application</a>
+    </div>
+    <script>
+        // Auto-redirect to the API endpoint
+        window.onload = function() {
+            setTimeout(function() {
+                window.location.href = '/api/';
+            }, 2000);
+        };
+    </script>
+</body>
+</html>

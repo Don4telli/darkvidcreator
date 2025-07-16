@@ -1,0 +1,28 @@
+{
+  "name": "ImageToVideo Creator",
+  "description": "Create videos from images with audio - Web-based GUI for video creation",
+  "repository": "https://github.com/yourusername/ImageToVideo",
+  "keywords": ["video", "images", "flask", "python", "moviepy", "tiktok"],
+  "env": {
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    },
+    "SECRET_KEY": {
+      "description": "Secret key for Flask sessions",
+      "generator": "secret"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}

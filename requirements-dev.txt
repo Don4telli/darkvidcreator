@@ -1,0 +1,49 @@
+# Development Dependencies for ImageToVideo Creator
+# Install with: pip install -r requirements-dev.txt
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# Code Quality
+black>=22.0.0
+flake8>=5.0.0
+flake8-docstrings>=1.6.0
+flake8-import-order>=0.18.1
+mypy>=0.991
+
+# Security
+bandit>=1.7.0
+safety>=2.3.0
+
+# Pre-commit hooks
+pre-commit>=2.20.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.2.0
+
+# Performance monitoring
+psutil>=5.9.0
+memory-profiler>=0.60.0
+
+# Development utilities
+ipython>=8.0.0
+jupyter>=1.0.0
+watchdog>=2.1.0
+
+# API documentation
+flasgger>=0.9.5
+
+# Database (optional)
+sqlalchemy>=1.4.0
+flask-sqlalchemy>=3.0.0
+flask-migrate>=3.1.0
+
+# Environment management
+python-dotenv>=0.19.0
+
+# HTTP client for testing
+requests>=2.28.0
+httpx>=0.23.0

@@ -1,0 +1,50 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#4A90E2" stroke="#2E5C8A" stroke-width="2"/>
+  
+  <!-- Film strip background -->
+  <rect x="8" y="20" width="48" height="24" rx="2" fill="#2C3E50"/>
+  
+  <!-- Film strip holes -->
+  <rect x="10" y="22" width="2" height="2" fill="#4A90E2"/>
+  <rect x="10" y="26" width="2" height="2" fill="#4A90E2"/>
+  <rect x="10" y="30" width="2" height="2" fill="#4A90E2"/>
+  <rect x="10" y="34" width="2" height="2" fill="#4A90E2"/>
+  <rect x="10" y="38" width="2" height="2" fill="#4A90E2"/>
+  <rect x="10" y="42" width="2" height="2" fill="#4A90E2"/>
+  
+  <rect x="52" y="22" width="2" height="2" fill="#4A90E2"/>
+  <rect x="52" y="26" width="2" height="2" fill="#4A90E2"/>
+  <rect x="52" y="30" width="2" height="2" fill="#4A90E2"/>
+  <rect x="52" y="34" width="2" height="2" fill="#4A90E2"/>
+  <rect x="52" y="38" width="2" height="2" fill="#4A90E2"/>
+  <rect x="52" y="42" width="2" height="2" fill="#4A90E2"/>
+  
+  <!-- Image frames -->
+  <rect x="16" y="24" width="8" height="6" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="0.5"/>
+  <rect x="28" y="24" width="8" height="6" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="0.5"/>
+  <rect x="40" y="24" width="8" height="6" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="0.5"/>
+  
+  <rect x="16" y="34" width="8" height="6" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="0.5"/>
+  <rect x="28" y="34" width="8" height="6" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="0.5"/>
+  <rect x="40" y="34" width="8" height="6" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="0.5"/>
+  
+  <!-- Simple image icons -->
+  <circle cx="20" cy="27" r="1.5" fill="#3498DB"/>
+  <polygon points="18,29 20,27.5 22,29" fill="#27AE60"/>
+  
+  <circle cx="32" cy="27" r="1.5" fill="#E74C3C"/>
+  <polygon points="30,29 32,27.5 34,29" fill="#F39C12"/>
+  
+  <circle cx="44" cy="27" r="1.5" fill="#9B59B6"/>
+  <polygon points="42,29 44,27.5 46,29" fill="#1ABC9C"/>
+  
+  <!-- Audio wave -->
+  <path d="M18 37 Q20 35 22 37 Q24 39 26 37" stroke="#E67E22" stroke-width="1.5" fill="none"/>
+  <path d="M30 37 Q32 35 34 37 Q36 39 38 37" stroke="#E67E22" stroke-width="1.5" fill="none"/>
+  <path d="M42 37 Q44 35 46 37" stroke="#E67E22" stroke-width="1.5" fill="none"/>
+  
+  <!-- Play button overlay -->
+  <circle cx="32" cy="50" r="6" fill="#27AE60" stroke="#1E8449" stroke-width="1"/>
+  <polygon points="29,47 29,53 36,50" fill="white"/>
+</svg>
