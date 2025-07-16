@@ -2,10 +2,6 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/env_test.py",
-      "use": "@vercel/python"
-    },
-    {
       "src": "api/minimal_test.py",
       "use": "@vercel/python"
     },
