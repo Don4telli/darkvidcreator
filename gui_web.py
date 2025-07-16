@@ -8,11 +8,23 @@ import os
 import sys
 import threading
 import webbrowser
+import logging
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.utils import secure_filename
 import tempfile
 import shutil
 from pathlib import Path
+
+# Load environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed
 
 # Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -20,8 +32,34 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from core.video_processor import VideoProcessor
 from core.tiktok_transcription import transcribe_tiktok_video
 
+# Initialize Flask app with enhanced configuration
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
+
+# Configuration from environment variables
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 100)) * 1024 * 1024  # Default 100MB
+app.config['UPLOAD_FOLDER'] = os.environ.get('TEMP_DIR', tempfile.gettempdir())
+
+# Enable CORS for cross-origin requests
+CORS(app)
+
+# Rate limiting
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, os.environ.get('LOG_LEVEL', 'INFO')),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.environ.get('LOG_FILE', 'server.log')),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Global variables for progress tracking
 progress_data = {}
@@ -32,27 +70,96 @@ video_processor = VideoProcessor()
 def index():
     return render_template('index.html')
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring."""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'version': '1.0.0',
+        'uptime': 'running'
+    })
+
+# Error handlers
+@app.errorhandler(413)
+def file_too_large(error):
+    """Handle file too large errors."""
+    logger.warning(f"File too large error from {request.remote_addr}")
+    return jsonify({'error': 'File too large. Please reduce file size and try again.'}), 413
+
+@app.errorhandler(429)
+def rate_limit_exceeded(error):
+    """Handle rate limit exceeded errors."""
+    logger.warning(f"Rate limit exceeded from {request.remote_addr}")
+    return jsonify({'error': 'Rate limit exceeded. Please try again later.'}), 429
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle internal server errors."""
+    logger.error(f"Internal server error: {error}")
+    return jsonify({'error': 'Internal server error. Please try again later.'}), 500
+
+# File validation constants
+ALLOWED_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp'}
+ALLOWED_AUDIO_EXTENSIONS = {'.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'}
+MAX_IMAGES_PER_REQUEST = int(os.environ.get('MAX_IMAGES_PER_REQUEST', 50))
+MAX_AUDIO_DURATION = int(os.environ.get('MAX_AUDIO_DURATION', 600))  # 10 minutes
+
+def validate_file_type(filename, allowed_extensions):
+    """Validate file type based on extension."""
+    if not filename:
+        return False
+    return Path(filename).suffix.lower() in allowed_extensions
+
+def validate_file_size(file, max_size_mb=50):
+    """Validate file size."""
+    file.seek(0, 2)  # Seek to end
+    size = file.tell()
+    file.seek(0)  # Reset to beginning
+    return size <= max_size_mb * 1024 * 1024
+
 @app.route('/upload', methods=['POST'])
+@limiter.limit("10 per minute")
 def upload_files():
     try:
+        logger.info(f"Upload request from {request.remote_addr}")
+        
         # Create temporary directory for this session
-        temp_dir = tempfile.mkdtemp()
+        temp_dir = tempfile.mkdtemp(prefix='darkvidcreator_')
         
         # Handle image files
         image_files = request.files.getlist('images')
         if not image_files or len(image_files) == 0:
+            logger.warning("No image files provided in upload request")
             return jsonify({'error': 'No image files provided'}), 400
+        
+        if len(image_files) > MAX_IMAGES_PER_REQUEST:
+            logger.warning(f"Too many images: {len(image_files)} > {MAX_IMAGES_PER_REQUEST}")
+            return jsonify({'error': f'Too many images. Maximum allowed: {MAX_IMAGES_PER_REQUEST}'}), 400
         
         image_paths = []
         for i, file in enumerate(image_files):
             if file.filename == '':
                 continue
+                
+            # Validate file type
+            if not validate_file_type(file.filename, ALLOWED_IMAGE_EXTENSIONS):
+                logger.warning(f"Invalid image file type: {file.filename}")
+                return jsonify({'error': f'Invalid image file type: {file.filename}'}), 400
+            
+            # Validate file size
+            if not validate_file_size(file, 50):  # 50MB per image
+                logger.warning(f"Image file too large: {file.filename}")
+                return jsonify({'error': f'Image file too large: {file.filename}'}), 400
+            
             filename = secure_filename(f"image_{i:03d}_{file.filename}")
             filepath = os.path.join(temp_dir, filename)
             file.save(filepath)
             image_paths.append(filepath)
+            logger.debug(f"Saved image: {filename}")
         
         if len(image_paths) == 0:
+            logger.warning("No valid image files uploaded")
             return jsonify({'error': 'No valid image files uploaded'}), 400
         
         # Handle audio file (optional)
