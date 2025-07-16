@@ -1,5 +1,5 @@
 [build]
-  command = "pip install -r requirements.txt && pip install -r netlify/functions/server/requirements.txt"
+  command = "pip install --upgrade pip && pip install -r requirements.txt && pip install -r netlify/functions/server/requirements.txt"
   publish = "public"
   functions = "netlify/functions"
 
@@ -32,7 +32,20 @@
   external_node_modules = ["@netlify/plugin-functions-install-core"]
   directory = "netlify/functions"
 
-# Note: Netlify is primarily for static sites
-# For a Flask app like this, you'll need to use Netlify Functions
-# or consider other platforms like Vercel, Railway, or Heroku
+# Python version configuration for Netlify
+[context.production.environment]
+  PYTHON_VERSION = "3.9"
+
+[context.deploy-preview.environment]
+  PYTHON_VERSION = "3.9"
+
+[context.branch-deploy.environment]
+  PYTHON_VERSION = "3.9"
+
+# Required for Netlify to properly detect and use Python
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@netlify/plugin-functions-install-core"]
+  directory = "netlify/functions"
+  python_version = "3.9"
 # that better support Python web applications
