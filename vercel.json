@@ -10,9 +10,18 @@
       "use": "@vercel/python"
     }
   ],
+  "build": {
+    "env": {
+      "PYTHON_VERSION": "3.9",
+      "NPM_CONFIG_PYTHON": "/usr/local/bin/python",
+      "LD_LIBRARY_PATH": "/usr/local/lib"
+    },
+    "use": "@vercel/python@latest",
+    "installCommand": "chmod +x vercel_build.sh && ./vercel_build.sh"
+  },
   "routes": [
     {
-      "src": "/health",
+      "src": "/api/health",
       "dest": "/api/health.py"
     },
     {
