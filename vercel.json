@@ -18,10 +18,14 @@
     "env": {
       "PYTHON_VERSION": "3.9",
       "NPM_CONFIG_PYTHON": "/usr/local/bin/python",
-      "LD_LIBRARY_PATH": "/usr/local/lib"
+      "LD_LIBRARY_PATH": "/usr/local/lib",
+      "PIP_CACHE_DIR": "/tmp/pip_cache"
     },
-    "use": "@vercel/python@latest",
-    "installCommand": "chmod +x vercel_build.sh && ./vercel_build.sh"
+    "use": "@vercel/python@5.1.1",
+    "config": {
+      "maxLambdaSize": "15mb",
+      "includeFiles": ["**/*.py", "**/*.json", "**/*.md", "**/*.txt"]
+    }
   },
   "routes": [
     {
