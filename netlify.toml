@@ -27,7 +27,6 @@
 
 [functions]
   directory = "netlify/functions"
-  python_version = "3.9"
 
 # Python version configuration for Netlify
 [context.production.environment]
