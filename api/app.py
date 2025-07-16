@@ -437,6 +437,45 @@ def debug_moviepy():
         
     except Exception as e:
         return jsonify({'error': f'MoviePy debug error: {str(e)}'}), 500
+
+@app.route('/api/debug-public')
+def debug_public():
+    """Public debug endpoint that bypasses authentication."""
+    try:
+        debug_info = {
+            'timestamp': datetime.now().isoformat(),
+            'python_version': sys.version,
+            'working_directory': os.getcwd(),
+            'moviepy_status': 'checking...',
+            'video_processor_status': 'checking...'
+        }
+        
+        # Check MoviePy
+        try:
+            import moviepy
+            debug_info['moviepy_status'] = f'SUCCESS - version {getattr(moviepy, "__version__", "unknown")}'
+            
+            # Try editor import
+            try:
+                import moviepy.editor
+                debug_info['moviepy_editor_status'] = 'SUCCESS - editor module available'
+            except ImportError as e:
+                debug_info['moviepy_editor_status'] = f'FAILED - {str(e)}'
+                
+        except ImportError as e:
+            debug_info['moviepy_status'] = f'FAILED - {str(e)}'
+        
+        # Check VideoProcessor
+        try:
+            from core.video_processor import VideoProcessor
+            debug_info['video_processor_status'] = 'SUCCESS - VideoProcessor imported'
+        except ImportError as e:
+            debug_info['video_processor_status'] = f'FAILED - {str(e)}'
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        return jsonify({'error': f'Debug error: {str(e)}', 'timestamp': datetime.now().isoformat()}), 500
  
 
 def find_free_port(start_port=5001):

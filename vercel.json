@@ -1,6 +1,11 @@
 {
   "version": 2,
-  "buildCommand": "./build.sh",
+  "builds": [
+    {
+      "src": "api/app.py",
+      "use": "@vercel/python"
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
@@ -8,14 +13,13 @@
     }
   ],
   "env": {
-    "FLASK_ENV": "production",
+    "PYTHON_VERSION": "3.9.18",
     "PIP_CONSTRAINT": "constraints.txt"
   },
+  "buildCommand": "./build.sh",
   "functions": {
     "api/app.py": {
-      "runtime": "python3.9",
-      "maxDuration": 300,
-      "includeFiles": "core/**"
+      "includeFiles": "**"
     }
   }
 }
