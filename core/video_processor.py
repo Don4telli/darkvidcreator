@@ -4,7 +4,7 @@ import traceback
 import tempfile
 from pathlib import Path
 from typing import List, Dict, Tuple
-from moviepy.editor import AudioFileClip, ImageClip, ColorClip, concatenate_videoclips, VideoFileClip
+from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips, ColorClip, VideoFileClip
 import numpy as np
 from collections import defaultdict
 import numpy as np
