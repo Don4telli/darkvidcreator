@@ -9,6 +9,7 @@ import sys
 import threading
 import webbrowser
 from flask import Flask, render_template, request, jsonify, send_file
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import tempfile
 import shutil
@@ -22,6 +23,14 @@ from core.video_processor import VideoProcessor
 from core.tiktok_transcription import transcribe_tiktok_video
 
 app = Flask(__name__)
+# Enable CORS for all routes
+CORS(app, resources={
+    r"/*": {
+        "origins": ["*"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
 
 # Global variables for progress tracking

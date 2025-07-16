@@ -13,4 +13,4 @@ flask>=2.0.0
 yt-dlp>=2023.1.6
 deepgram-sdk>=3.0.0
 gunicorn>=20.1.0
-Werkzeug<3.0.0
+Werkzeug<3.0.0flask-cors>=3.0.10
